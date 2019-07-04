@@ -12,24 +12,24 @@ const schema = gql`
         user(id: ID!): User
         users: [User!]
 
-        orders: [Order!]!
-        order(id: ID!): Order!
+        posts: [Post!]!
+        post(id: ID!): Post!
     }
 
     type Mutation {
-        placeOrder(product: String!): Order!
-        deleteOrder(id: ID!): Boolean!
+        createPost(content: String!): Post!
+        deletePost(id: ID!): Boolean!
     }
 
     type User {
         id: ID!
         username: String!,
-        orders: [Order!]
+        posts: [Post!]
     }
 
-    type Order {
+    type Post {
         id: ID!
-        product: String!
+        content: String!
         user: User!
     }
 `;
@@ -39,25 +39,25 @@ let users = {
         id: '1',
         firstname: 'Gene',
         lastname: 'Kuo',
-        orderIds: [1],
+        postIds: [1],
     },
     2: {
         id: '2',
         firstname: 'Barry',
         lastname: 'Jan',
-        orderIds: [2],
+        postIds: [2],
     },
 };
 
-let orders = {
+let posts = {
     1: {
         id: '1',
-        product: 'iMac',
+        content: 'I am going to describe how to design...', 
         userId: '1'
     },
     2: {
         id: '2',
-        product: 'MacBook Pro',
+        content: 'Apollo is the third party lib we can use to ease...', 
         userId: '2',
     },
 };
@@ -75,48 +75,48 @@ const resolvers = {
         users: () => {
             return Object.values(users);
         },
-        orders: () => {
-            return Object.values(orders);
+        posts: () => {
+            return Object.values(posts);
         },
-        order: (parent, { id }) => {
-            return orders[id];
+        post: (parent, { id }) => {
+            return posts[id];
         },
     },
 
     Mutation: {
-        placeOrder: (parent, { product }, { me }) => {
+        createPost: (parent, { content }, { me }) => {
             const id = uuidv4();
-            const order = {
+            const post = {
                 id,
-                product,
+                content,
                 userId: me.id,
             };
-            orders[id] = order;
-            users[me.id].orderIds.push(id);
-            return order;
+            posts[id] = post;
+            users[me.id].postIds.push(id);
+            return post;
         },
-        deleteOrder: (parent, { id }) => {
-            const { [id]: order, ...otherOrders } = orders;
+        deletePost: (parent, { id }) => {
+            const { [id]: post, ...otherPosts } = posts;
 
-            if (!order) {
+            if (!post) {
                 return false;
             }
 
-            orders = otherOrders;
+            posts = otherPosts;
             return true;
         },
     },
 
     User: {
         username: user => `${user.firstname} ${user.lastname}`,
-        orders: user => {
-            return Object.values(orders).filter(order => order.userId === user.id);
+        posts: user => {
+            return Object.values(posts).filter(post => post.userId === user.id);
         },
     },
 
-    Order: {
-        user: order => {
-            return users[order.userId];
+    Post: {
+        user: post => {
+            return users[post.userId];
         },
     },
 };
